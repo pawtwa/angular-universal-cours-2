@@ -1,3 +1,5 @@
+import { ngExpressEngine } from '@nguniversal/express-engine';
+import { provideModuleMap } from '@nguniversal/module-map-ngfactory-loader';
 
 import 'zone.js/dist/zone-node';
 import 'reflect-metadata';
@@ -5,37 +7,35 @@ import {renderModuleFactory} from '@angular/platform-server';
 import * as express from 'express';
 import { readFileSync } from 'fs';
 import { enableProdMode } from '@angular/core';
+import { AppServerModule } from './src/main.server';
 
-const {AppServerModuleNgFactory} = require('./dist-server/main');
+const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('./dist-server/main');
 
 enableProdMode();
 
 const app = express();
 
-const indexHtml = readFileSync(__dirname + '/dist/index.html', 'utf-8').toString();
+const distFolder = __dirname + '/dist';
 
-
-app.get('*.*', express.static(__dirname + '/dist', {
-    maxAge: '1y'
+app.engine('html', ngExpressEngine({
+    bootstrap: AppServerModuleNgFactory,
+    providers: [
+        provideModuleMap(LAZY_MODULE_MAP)
+    ]
 }));
 
-app.route('*').get((req, res) => {
+app.set('view engine', 'html');
+app.set('views', distFolder);
 
-    renderModuleFactory(AppServerModuleNgFactory, {
-        document: indexHtml,
-        url: req.url
+app.get('*.*', express.static(distFolder, {
+    maxAge: '3h'
+}));
+
+app.get('*', (req, res) => {
+    res.render('index', {
+        req
     })
-        .then(html => {
-            res.status(200).send(html);
-        })
-        .catch(err => {
-            console.log(err);
-            res.sendStatus(500);
-        });
-
 });
-
-
 
 app.listen(9000, () => {
     console.log(`Angular Universal Node Express server listening on http://localhost:9000`);
