@@ -1,10 +1,7 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute } from "@angular/router";
-import { MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
-import { Meta, Title } from '@angular/platform-browser';
-import { debounceTime, distinctUntilChanged, startWith, tap, delay } from 'rxjs/operators';
-import { merge } from "rxjs/observable/merge";
-import { fromEvent } from 'rxjs/observable/fromEvent';
+import { MatTableDataSource } from '@angular/material';
+import { Meta, Title, TransferState, makeStateKey } from '@angular/platform-browser';
 
 import { Course } from "../model/course";
 import { CoursesService } from "../services/courses.service";
@@ -30,7 +27,9 @@ export class CourseComponent implements OnInit {
         private route: ActivatedRoute,
         private coursesService: CoursesService,
         private title: Title,
-        private meta: Meta
+        private meta: Meta,
+        @Inject(PLATFORM_ID) private platformId,
+        private transferState: TransferState
     ) {
 
     }
@@ -43,8 +42,23 @@ export class CourseComponent implements OnInit {
 
         this.dataSource = new MatTableDataSource([]);
 
-        this.coursesService.findAllCourseLessons(this.course.id)
-            .subscribe(lessons => this.dataSource.data = lessons);
+        const COURSE_LESSONS_KEY = makeStateKey<Lesson[]>('course_lessons_' + this.course.id);
+
+        if (this.transferState.hasKey(COURSE_LESSONS_KEY)) {
+            this.dataSource.data = this.transferState.get<Lesson[]>(COURSE_LESSONS_KEY, null);
+            //this.transferState.remove(COURSE_LESSONS_KEY);
+            console.log('hasKey course_lessons_' + this.course.id, COURSE_LESSONS_KEY, this.dataSource.data);
+        } else {
+            this.coursesService.findAllCourseLessons(this.course.id)
+            .subscribe(lessons => {
+                this.dataSource.data = lessons;
+                this.transferState.set(COURSE_LESSONS_KEY, this.dataSource.data);
+                console.log('set course_lessons_' + this.course.id, COURSE_LESSONS_KEY, this.dataSource.data);
+            });
+        }
+
+
+        
 
         this.title.setTitle(this.course.description);
         this.meta.addTag({
@@ -52,10 +66,6 @@ export class CourseComponent implements OnInit {
             content: this.course.longDescription
         });
 
-        this.meta.addTag({
-            name: 'twitter:description',
-            content: 'summary'
-        });
         this.meta.addTag({
             name: 'twitter:card',
             content: '@AngularUniv'

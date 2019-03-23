@@ -1,11 +1,11 @@
 
 
 import {Injectable} from "@angular/core";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {Observable} from "rxjs/Observable";
 import {Course} from "../model/course";
 import {Lesson} from "../model/lesson";
-import {map} from 'rxjs/operators';
+import {map, timeout} from 'rxjs/operators';
 
 
 
@@ -19,14 +19,29 @@ export class CoursesService {
     }
 
     findCourseById(courseId: string): Observable<Course> {
-        return this.http.get<Course>(`${CoursesService.API_URL}/courses/${courseId}.json`);
+        const headers = new HttpHeaders({ 
+            timeout: "2000"
+        });
+        return this.http.get<Course>(`${CoursesService.API_URL}/courses/${courseId}.json`, {
+            headers: headers
+        });
     }
 
     findAllCourses(): Observable<Course[]> {
-        return this.http.get<Course[]>(`${CoursesService.API_URL}/courses.json`);
+        const headers = new HttpHeaders({ 
+            timeout: "2000"
+        });
+        return this.http.get<Course[]>(`${CoursesService.API_URL}/courses.json`, {
+            headers: headers
+        });
     }
 
     findAllCourseLessons(courseId:string): Observable<Lesson[]> {
-        return this.http.get<Lesson[]>(`${CoursesService.API_URL}/lessons/${courseId}.json`);
+        const headers = new HttpHeaders({ 
+            timeout: "2000"
+        });
+        return this.http.get<Lesson[]>(`${CoursesService.API_URL}/lessons/${courseId}.json`, {
+            headers: headers
+        });
     }
 }

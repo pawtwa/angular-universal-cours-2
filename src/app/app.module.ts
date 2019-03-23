@@ -25,11 +25,10 @@ import {CourseResolver} from "./services/course.resolver";
 import { CourseDialogComponent } from './course-dialog/course-dialog.component';
 import {ReactiveFormsModule} from "@angular/forms";
 import {MatMomentDateModule} from "@angular/material-moment-adapter";
-import { HttpClientModule} from '@angular/common/http';
-
-
-
-
+import { HttpClientModule, HTTP_INTERCEPTORS} from '@angular/common/http';
+import { AppShellNoRenderDirective } from './directives/app-shell-no-render.directive';
+import { AppShellRenderDirective } from './directives/app-shell-render.directive';
+import { TimeoutInterceptor, DEFAULT_TIMEOUT } from './services/timeout.interceptor';
 
 @NgModule({
     declarations: [
@@ -38,6 +37,8 @@ import { HttpClientModule} from '@angular/common/http';
         CourseComponent,
         CoursesCardListComponent,
         CourseDialogComponent,
+        AppShellNoRenderDirective,
+        AppShellRenderDirective
     ],
     imports: [
         BrowserModule.withServerTransition({ appId: 'serverApp' }),
@@ -66,7 +67,17 @@ import { HttpClientModule} from '@angular/common/http';
     ],
     providers: [
         CoursesService,
-        CourseResolver
+        CourseResolver,
+        { 
+            provide: HTTP_INTERCEPTORS,
+            useClass: TimeoutInterceptor, 
+            multi: true
+        },
+        {
+            provide: DEFAULT_TIMEOUT,
+            useValue: 5000,
+            multi: false
+        }
     ],
     bootstrap: [AppComponent],
     entryComponents: [CourseDialogComponent]

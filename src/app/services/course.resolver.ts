@@ -5,13 +5,18 @@ import {Observable} from 'rxjs/Observable';
 import {CoursesService} from './courses.service';
 import {first, tap} from 'rxjs/operators';
 import {of} from 'rxjs/observable/of';
-import {isPlatformServer} from '@angular/common';
+import {isPlatformServer, isPlatformBrowser} from '@angular/common';
+import { TransferState, makeStateKey } from '@angular/platform-browser';
 
 
 @Injectable()
 export class CourseResolver implements Resolve<Course> {
 
-    constructor(private coursesService: CoursesService) {
+    constructor(
+        private coursesService: CoursesService,
+        @Inject(PLATFORM_ID) private platformId,
+        private transferState: TransferState
+    ) {
 
     }
 
@@ -19,12 +24,24 @@ export class CourseResolver implements Resolve<Course> {
 
         const courseId = route.params['id'];
 
-        return this.coursesService.findCourseById(courseId)
-            .pipe(
-                first()
-            );
+        const COURSE_KEY = makeStateKey<Course>('course-' + courseId);
 
-
+        if (this.transferState.hasKey(COURSE_KEY)) {
+            const course = this.transferState.get<Course>(COURSE_KEY, null);
+            //this.transferState.remove(COURSE_KEY);
+            console.log('hasKey course-' + courseId, COURSE_KEY, course);
+            return of(course);
+        } else {
+            if (isPlatformBrowser(this.platformId) || isPlatformServer(this.platformId)) {
+                return this.coursesService.findCourseById(courseId)
+                .pipe(
+                    first(),
+                    tap(course => {
+                        this.transferState.set(COURSE_KEY, course);
+                        console.log('set course-' + courseId, COURSE_KEY, course);
+                    })
+                );
+            }
+        }
     }
-
 }

@@ -8,6 +8,7 @@
     "build:client-app:prod": "./node_modules/.bin/ng build --prod",
     "build:server-app:prod": "./node_modules/.bin/ng run angular-universal-course:server",
     "build-all": "./node_modules/.bin/npm-run-all build:client-app:prod build:server-app:prod build:functions",
+    "build-all-1": "./node_modules/.bin/npm-run-all build:client-app:prod build:server-app:prod",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
