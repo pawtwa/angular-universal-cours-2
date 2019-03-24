@@ -9,7 +9,7 @@ import { readFileSync } from 'fs';
 import { enableProdMode } from '@angular/core';
 import { AppServerModule } from './src/main.server';
 
-const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('./dist-server/main');
+const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('./functions/dist-server/main');
 
 enableProdMode();
 
